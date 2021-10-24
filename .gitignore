@@ -5,6 +5,9 @@ bundle.js
 index.html
 .gitmodules
 ACG
+
+!./house/index.html
+
 setting.json.Python
 [Bb]in
 [Ii]nclude
