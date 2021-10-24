@@ -1,9 +1,11 @@
+// lower these variables for more stable drawing
+const drawFrames = 8; // 5 is recommended
+const drawEverySecond = 0.2;
+
 let canvas; // DOM object corresponding to the canvas
 let graphics; // 2D graphics context for drawing to the canvas
 let cH;
 let cW;
-const drawFrames = 8;
-const drawEverySecond = 0.2;
 let mouse_coord = {
   x: 0,
   y: 0,
@@ -11,12 +13,12 @@ let mouse_coord = {
 const mouse_list = (mouse) => {
   return [mouse.x, mouse.y];
 };
+// store history of mouse movement to a queue
 const mouse_queue = Array(drawFrames + 1).fill(mouse_list(mouse_coord));
-let frames = 0;
 
+// detect campus resive and update the center coordinate
 const resizeCanvas = () => {
   const devicePixelRatio = window.devicePixelRatio;
-  console.log(devicePixelRatio);
   cW = window.innerWidth / 2.0;
   cH = window.innerHeight / 2.0;
   canvas.width = cW * 2 * devicePixelRatio - 16;
@@ -28,11 +30,15 @@ const addClickListeners = () => {
   document.onmousemove = handleEvent;
 };
 
+// store the coordinate of the mouse pointer everytime it moves
 const handleEvent = (e) => {
   mouse_coord.x = e.pageX - cW;
   mouse_coord.y = e.pageY - cH;
 };
 
+// draws the shape specified in coords RELATIVE to CENTER
+// args: center: [x,y], coords: [[x,y],[x,y],...]
+//       fill: fillColor, stroke: strokeColor, lineWidth: lineWidth
 const drawShape = (center, coords, fill, stroke, lineWidth) => {
   if (coords.length < 2) return;
   graphics.save();
@@ -85,6 +91,9 @@ const windows = [
   [49, 0],
 ];
 const doorKnobColor = "#ffff00";
+
+// draw front wall and other objects
+// args cx, cy specify the center coordinate to render the shapes
 const drawFront = (cx, cy) => {
   graphics.save();
   graphics.strokeStyle = "black";
@@ -96,6 +105,7 @@ const drawFront = (cx, cy) => {
   drawShape([cx - 111, cy - 39], windows, windowsColor, null, null);
   drawShape([cx - 62, cy - 39], windows, windowsColor, null, null);
 
+  // doorknob
   graphics.save();
   graphics.fillStyle = "#ffff00";
   graphics.beginPath();
@@ -103,10 +113,12 @@ const drawFront = (cx, cy) => {
   graphics.fill();
   graphics.stroke();
   graphics.restore();
-
   graphics.restore();
 };
 
+// draw quadrilateral and surround the area with `strokeOn` color.
+// args: coords: [[x,y] x4], fill: fillColor, strokeOn: color of surrounding lines
+//       strokeSet: [bool x4]: surrounding lines are drawn if true. corresponding with coords in order
 const drawShiftRect = (coords, fill, strokeOn, strokeSet) => {
   graphics.save();
   drawShape([0, 0], coords, fill, fill, "1");
@@ -127,6 +139,8 @@ const drawShiftRect = (coords, fill, strokeOn, strokeSet) => {
   graphics.restore();
 };
 
+// draw side wall. Specify the two points coordinate at the front and the function will
+// calculate the appropriate coordinate to draw the wall
 const drawSideWall = (line, c1, c2, index, fillColor) => {
   const scale = 1.0 / (drawFrames + 2);
   const front = index + 3;
@@ -199,6 +213,7 @@ const sideLineRoof = [
   },
 ];
 
+// specify which object to draw first (later is shown on the front)
 const lineOrderList = Array(4)
   .fill(0)
   .map((_, i) => {
@@ -221,18 +236,19 @@ const lineOrderList = Array(4)
         ];
     return array;
   });
+// draw wall -> roof if mouse is in the upper half of the screen, and vice-versa
 const lineOrder = (x, y, check) => {
   lines = lineOrderList[(x < 0) + 2 * (y < 88)];
   if (check || y < -88) lines.push(sideLineFloor);
   return lines;
 };
+// draw wall and roof shown on the side
 const drawSide = (centers) => {
   graphics.save();
 
   const movedUp = centers.some(
     (_, i) => i !== centers.length - 1 && centers[i + 1][1] - centers[i][1] < 0
   );
-  console.log(movedUp);
   for (let i = 0; i < drawFrames; i++) {
     const sideLines = lineOrder(...centers[i], movedUp);
     sideLines.forEach((sideLine) => {
@@ -253,6 +269,7 @@ function draw() {
   mouse_queue.shift();
   mouse_queue.push(mouse_list(mouse_coord));
 
+  // clear the whole campus
   graphics.clearRect(0, 0, canvas.width, canvas.height);
   graphics.fillStyle = "#000";
   graphics.strokeStyle = "black";
@@ -265,17 +282,18 @@ function draw() {
   graphics.restore();
 
   graphics.save();
-  graphics.fillStyle = "#fff";
+  graphics.fillStyle = "#ffffff";
   graphics.strokeStyle = "black";
   graphics.lineWidth = "3";
   graphics.strokeRect(40, 75, cW * 2 - 90, 140);
+  graphics.fillRect(40, 75, cW * 2 - 90, 140);
   graphics.font = "20px serif";
-  graphics.fillStyle = "#000";
+  graphics.fillStyle = "#000000";
   graphics.fillText("Gently move the mouse around.", 50, 100);
-  graphics.fillText("If the screen glitches (due to PC spec), please", 50, 125);
+  graphics.fillText("If the screen glitches(due to PC spec),", 50, 125);
   graphics.fillText("change `drawFrames` or `drawEverySecond`", 50, 150);
   graphics.fillText("in script to a lower value.", 50, 175);
-  graphics.fillText(`cursor: ${mouse_coord.x}, ${mouse_coord.y}`, 50, 200);
+  graphics.fillText(`cursor: ${mouse_coord.x},${mouse_coord.y}`, 50, 200);
   graphics.restore();
 }
 
