@@ -1,0 +1,83 @@
+<html>
+  <head>
+    <title>House Homework</title>
+    <meta name="author" content="NAME (STUDENT ID)" />
+    <script>
+      let canvas; // DOM object corresponding to the canvas
+      let graphics; // 2D graphics context for drawing to the canvas
+      // Drawing function
+      function draw() {
+        graphics.fillStyle = "#975B5B";
+        graphics.strokeStyle = "black";
+        graphics.lineWidth = "3";
+        graphics.save();
+
+        // Draw a triangle for the roof
+        graphics.beginPath();
+        graphics.moveTo(100, 260);
+        graphics.lineTo(300, 10);
+        graphics.lineTo(500, 260);
+        graphics.closePath();
+        graphics.fill();
+        graphics.stroke();
+
+        // chimney
+        graphics.fillRect(381, 60, 45, 120);
+        graphics.strokeRect(381, 60, 45, 140);
+        drawEllipse(graphics, 380, 55, 47, 14);
+        graphics.fillRect(378, 198, 55, 5);
+
+        // house walls
+        graphics.fillRect(100, 260, 400, 300);
+        graphics.strokeRect(100, 260, 400, 300);
+
+        // windows
+        graphics.fillStyle = "black";
+        graphics.fillRect(130, 300, 70, 45);
+        graphics.fillRect(205, 300, 70, 45);
+        graphics.fillRect(325, 300, 70, 45);
+        graphics.fillRect(400, 300, 70, 45);
+        graphics.fillRect(130, 350, 70, 45);
+        graphics.fillRect(205, 350, 70, 45);
+        graphics.fillRect(325, 350, 70, 45);
+        graphics.fillRect(400, 350, 70, 45);
+        graphics.fillRect(325, 425, 70, 45);
+        graphics.fillRect(400, 425, 70, 45);
+        graphics.fillRect(325, 475, 70, 45);
+        graphics.fillRect(400, 475, 70, 45);
+
+        // door lines
+        graphics.beginPath();
+        graphics.restore();
+        graphics.moveTo(200, 423);
+        graphics.lineTo(200, 560);
+        graphics.moveTo(140, 433);
+        graphics.lineTo(140, 560);
+        graphics.moveTo(260, 434);
+        graphics.lineTo(260, 560);
+        graphics.stroke();
+        graphics.beginPath();
+        graphics.arc(199, 562, 140, 1.355 * Math.PI, 1.65 * Math.PI); // door arc
+        graphics.stroke();
+
+        // door handles
+        graphics.beginPath();
+        graphics.arc(185, 510, 5, 0, 2 * Math.PI);
+        graphics.stroke();
+        graphics.beginPath();
+        graphics.arc(215, 510, 5, 0, 2 * Math.PI);
+        graphics.stroke();
+      }
+      // Initialization function
+      function init() {
+        canvas = document.getElementById("myCanvas");
+        graphics = canvas.getContext("2d");
+        draw(); // Draw onto the canvas
+      }
+      window.onload = init; // Runs when window is loaded
+    </script>
+  </head>
+  <body>
+    <canvas width="800" height="600" id="myCanvas"></canvas>
+  </body>
+</html>
