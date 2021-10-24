@@ -6,7 +6,7 @@ index.html
 .gitmodules
 ACG
 
-!./house/index.html
+!house/index.html
 
 setting.json.Python
 [Bb]in
