@@ -53,3 +53,11 @@
 - not programmable but very configurable
   - color blending modes
   - alpha blending function
+
+# GLSL Programming Language
+
+- convert the canvas coordinates to representation of axis
+
+```glsl
+vec3 p = (2.0) * gl_GragCoord.xy - u_resolution.xy ) / u_resolution.y;
+```
