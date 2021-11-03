@@ -3,7 +3,6 @@ dist/
 dist*/
 bundle.js
 index.html
-.gitmodules
 ACG
 
 !house/index.html
