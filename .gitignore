@@ -2,7 +2,6 @@ node_modules/
 dist/
 dist*/
 bundle.js
-index.html
 ACG
 
 !house/index.html
