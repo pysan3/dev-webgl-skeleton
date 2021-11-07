@@ -7,7 +7,33 @@ const cSize = {
 } as const;
 type cSize = typeof cSize[keyof typeof cSize];
 
-const VERTEX_SIZE = 2;
+const VERTEX_SIZE = 3;
+
+const octa0Array = new Float32Array([
+    0, 1, 0,
+    0, 0, 1,
+    1, 0, 0,
+    0, -1, 0,
+    0, 0, -1,
+    -1, 0, 0,
+])
+const OCTA0_ARRAY_LENGTH = octa0Array.length
+const octa1Array = new Float32Array([
+    0, -1, 0,
+    0, 0, 1,
+    -1, 0, 0,
+    0, 1, 0,
+    0, 0, -1,
+    1, 0, 0,
+])
+const OCTA1_ARRAY_LENGTH = octa1Array.length
+const floorArray = new Float32Array([
+    -0.8, 0, -0.8,
+    -0.8, 0, 0.8,
+    0.8, 0, -0.8,
+    0.8, 0, 0.8
+])
+const FLOOR_ARRAY_LENGTH = floorArray.length
 
 const main = () => {
     const canvas = document.createElement('canvas');
@@ -21,6 +47,7 @@ const main = () => {
         return
     }
     const gl: WebGL2RenderingContext = mayBeContext;
+
     const vertexShader = gl.createShader(gl.VERTEX_SHADER);
     gl.shaderSource(vertexShader, vertexShaderSource);
     gl.compileShader(vertexShader);
@@ -72,40 +99,51 @@ const main = () => {
     }
     gl.useProgram(program);
 
-    // Clear screen
-    gl.clearColor(0, 0, 0, 0);
-    gl.clear(gl.COLOR_BUFFER_BIT);
-
-    /*
-    2___3
-    |\  |
-    | \ |
-    |__\|
-    0   1
-   */
-    const vertexBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
-    const VERTEX_NUMS = 4;
-    const vertices = new Float32Array([
-        -1, -1,
-        1, -1,
-        -1, 1,
-        1,  1
-    ]);
-    gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
+    const floorBuffer = gl.createBuffer()
+    gl.bindBuffer(gl.ARRAY_BUFFER, floorBuffer)
+    gl.bufferData(gl.ARRAY_BUFFER, floorArray, gl.STATIC_DRAW)
+    const octahedron0 = gl.createBuffer()
+    gl.bindBuffer(gl.ARRAY_BUFFER, octahedron0)
+    gl.bufferData(gl.ARRAY_BUFFER, octa0Array, gl.STATIC_DRAW)
+    const octahedron1 = gl.createBuffer()
+    gl.bindBuffer(gl.ARRAY_BUFFER, octahedron1)
+    gl.bufferData(gl.ARRAY_BUFFER, octa1Array, gl.STATIC_DRAW)
 
     // Get and set vertex attribute
-    const vertexAttribLocation = getAttribLocation(program, 'pos');
-    gl.enableVertexAttribArray(vertexAttribLocation);
-    gl.vertexAttribPointer(vertexAttribLocation, VERTEX_SIZE, gl.FLOAT, false, 0, 0);
-    const resHandle = getUniformLocation(program, 'u_resolution');
-    gl.uniform2f(resHandle, cSize.width, cSize.height);
-    const timeHandle = getUniformLocation(program, 'u_time');
+    const positionLocation = getAttribLocation(program, "a_position");
+    gl.enableVertexAttribArray(positionLocation)
+    const resLocation = getUniformLocation(program, 'u_resolution');
+    gl.uniform2f(resLocation, cSize.width, cSize.height);
+    const timeLocation = getUniformLocation(program, 'u_time');
+    const drawIdLocation = getUniformLocation(program, 'u_drawid');
+
 
     const draw = (time: number) => {
-        gl.uniform1f(timeHandle, time * 0.001)
-        // Draw triangles
-        gl.drawArrays(gl.TRIANGLE_STRIP, 0, VERTEX_NUMS);
+        // Clear screen
+        gl.clearColor(1,1,1,1);
+        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+        gl.enable(gl.CULL_FACE)
+        gl.enable(gl.DEPTH_TEST)
+
+        gl.uniform1f(timeLocation, time * 0.001)
+
+        // draw floor
+        gl.uniform1i(drawIdLocation, 1)
+        gl.bindBuffer(gl.ARRAY_BUFFER, floorBuffer)
+        gl.vertexAttribPointer(positionLocation, VERTEX_SIZE, gl.FLOAT, false, 0, 0)
+        gl.drawArrays(gl.TRIANGLE_STRIP, 0, FLOOR_ARRAY_LENGTH / VERTEX_SIZE);
+
+        // draw first half of octahedron
+        gl.uniform1i(drawIdLocation, 0)
+        gl.bindBuffer(gl.ARRAY_BUFFER, octahedron0)
+        gl.vertexAttribPointer(positionLocation, VERTEX_SIZE, gl.FLOAT, false, 0, 0)
+        gl.drawArrays(gl.TRIANGLE_STRIP, 0, OCTA0_ARRAY_LENGTH / VERTEX_SIZE)
+
+        // draw second half of octahedron
+        gl.uniform1i(drawIdLocation, 0)
+        gl.bindBuffer(gl.ARRAY_BUFFER, octahedron1)
+        gl.vertexAttribPointer(positionLocation, VERTEX_SIZE, gl.FLOAT, false, 0, 0)
+        gl.drawArrays(gl.TRIANGLE_STRIP, 0, OCTA1_ARRAY_LENGTH / VERTEX_SIZE)
 
         gl.flush();
         requestAnimationFrame(draw)
