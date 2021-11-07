@@ -17,7 +17,24 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
 /* harmony export */ });
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = ("#version 300 es\nprecision mediump float;\nprecision mediump int;\n#define GLSLIFY 1\nuniform float u_time;\nuniform int u_drawid;\n\nin float depth;\nout vec4 color_out;\n\nvoid main(){\n    if (u_drawid == 0) color_out = vec4(0.1, 0.1, 1.0 - depth * 3.0, 1.0);\n    else color_out = vec4(vec3(1.0 - depth), 1.0);\n}\n");
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (`#version 300 es
+
+precision mediump float;
+precision mediump int;
+#define GLSLIFY 1
+uniform float u_time;
+uniform int u_drawid;
+
+in float depth;
+out vec4 color_out;
+
+void main(){
+    if (u_drawid == 0) color_out = vec4(0.1, 0.1, 1.0 - depth * 3.0, 1.0);
+    else color_out = vec4(vec3(1.0 - depth), 1.0);
+}
+
+
+`);
 
 /***/ }),
 
@@ -31,7 +48,83 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
 /* harmony export */ });
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = ("#version 300 es\nprecision mediump float;\nprecision mediump int;\n#define GLSLIFY 1\nuniform float u_time;\nuniform vec2 u_resolution;\nuniform int u_drawid;\n\nin vec4 a_position;\nout float depth;\n\n// Based on 'WebGL - A Beginners Guide'\nmat4 xRotMat( in float deg ) {\n\treturn mat4(\t1.0,\t\t0,\t\t\t0,\t\t\t0,\n\t\t\t \t\t0, \tcos(deg),\t-sin(deg),\t\t0,\n\t\t\t\t\t0, \tsin(deg),\t cos(deg),\t\t0,\n\t\t\t\t\t0, \t\t\t0,\t\t\t  0, \t\t1);\n}\nmat4 yRotMat( in float deg ) {\n\treturn mat4(\tcos(deg),\t\t0,\t\tsin(deg),\t0,\n\t\t\t \t\t\t\t0,\t\t1.0,\t\t\t 0,\t0,\n\t\t\t\t\t-sin(deg),\t0,\t\tcos(deg),\t0,\n\t\t\t\t\t\t\t0, \t\t0,\t\t\t\t0,\t1);\n}\nmat4 zRotMat( in float deg ) {\n\treturn mat4(\tcos(deg),\t\t-sin(deg),\t0,\t0,\n\t\t\t \t\tsin(deg),\t\tcos(deg),\t\t0,\t0,\n\t\t\t\t\t\t\t0,\t\t\t\t0,\t\t1,\t0,\n\t\t\t\t\t\t\t0,\t\t\t\t0,\t\t0,\t1);\n}\n\nmat4 scaleMat(in float x, in float y, in float z) {\n    mat4 diag = mat4(1.0);\n    diag[0][0] = x; diag[1][1] = y; diag[2][2] = z;\n    return diag;\n}\n\nmat4 translate(in vec3 t) {\n    return mat4( 1.0, 0.0, 0.0, 0,\n                  0.0, 1.0, 0.0, 0,\n                  0.0, 0.0, 1.0, 0,\n                  t.xyz, 1.0 );\n}\n\nmat4 projection(float l, float r, float b, float t, float n, float f) {\n    mat4 m = mat4(\n        2.0 / (r - l), 0.0, 0.0, -(r + l) / (r - l),\n        0.0, 2.0 / (t - b), 0.0, -(t + b) / (t - b),\n        0.0, 0.0, 2.0 / (f - n), -(f + n) / (f - n),\n        0.0, 0.0, 0.0, 1.0\n    );\n    return m;\n}\n\nvoid main(){\n    vec4 position = a_position;\n    if (u_drawid == 0) { // ramiel\n        // use some prime numbers to generate rotation that looks quite random. (yah, 57 is definitely a prime number)\n        position = translate(vec3(0.1, 0.2, -1.0))\n            * xRotMat(radians(u_time * 83.0))\n            * yRotMat(radians(u_time * 107.0))\n            * zRotMat(radians(u_time * 57.0))\n            * position;\n    } else { // floor\n        position = translate(vec3(0.0, -1.0, -1.0))\n            * position;\n    }\n\n    gl_Position = projection(-1.0, 1.0, -1.0, 1.0, -0.01, -10.0) * position;\n\n    depth = gl_Position.z;\n}\n\n");
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (`#version 300 es
+
+precision mediump float;
+precision mediump int;
+#define GLSLIFY 1
+uniform float u_time;
+uniform vec2 u_resolution;
+uniform int u_drawid;
+
+in vec4 a_position;
+out float depth;
+
+// Based on 'WebGL - A Beginners Guide'
+mat4 xRotMat( in float deg ) {
+	return mat4(	1.0,		0,			0,			0,
+			 		0, 	cos(deg),	-sin(deg),		0,
+					0, 	sin(deg),	 cos(deg),		0,
+					0, 			0,			  0, 		1);
+}
+mat4 yRotMat( in float deg ) {
+	return mat4(	cos(deg),		0,		sin(deg),	0,
+			 				0,		1.0,			 0,	0,
+					-sin(deg),	0,		cos(deg),	0,
+							0, 		0,				0,	1);
+}
+mat4 zRotMat( in float deg ) {
+	return mat4(	cos(deg),		-sin(deg),	0,	0,
+			 		sin(deg),		cos(deg),		0,	0,
+							0,				0,		1,	0,
+							0,				0,		0,	1);
+}
+
+mat4 scaleMat(in float x, in float y, in float z) {
+    mat4 diag = mat4(1.0);
+    diag[0][0] = x; diag[1][1] = y; diag[2][2] = z;
+    return diag;
+}
+
+mat4 translate(in vec3 t) {
+    return mat4( 1.0, 0.0, 0.0, 0,
+                  0.0, 1.0, 0.0, 0,
+                  0.0, 0.0, 1.0, 0,
+                  t.xyz, 1.0 );
+}
+
+mat4 projection(float l, float r, float b, float t, float n, float f) {
+    mat4 m = mat4(
+        2.0 / (r - l), 0.0, 0.0, -(r + l) / (r - l),
+        0.0, 2.0 / (t - b), 0.0, -(t + b) / (t - b),
+        0.0, 0.0, 2.0 / (f - n), -(f + n) / (f - n),
+        0.0, 0.0, 0.0, 1.0
+    );
+    return m;
+}
+
+void main(){
+    vec4 position = a_position;
+    if (u_drawid == 0) { // ramiel
+        // use some prime numbers to generate rotation that looks quite random. (yah, 57 is definitely a prime number)
+        position = translate(vec3(0.1, 0.2, -1.0))
+            * xRotMat(radians(u_time * 83.0))
+            * yRotMat(radians(u_time * 107.0))
+            * zRotMat(radians(u_time * 57.0))
+            * position;
+    } else { // floor
+        position = translate(vec3(0.0, -1.0, -1.0))
+            * position;
+    }
+
+    gl_Position = projection(-1.0, 1.0, -1.0, 1.0, -0.01, -10.0) * position;
+
+    depth = gl_Position.z;
+}
+
+
+
+`);
 
 /***/ })
 
