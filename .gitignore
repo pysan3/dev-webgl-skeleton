@@ -1,6 +1,7 @@
 node_modules/
 dist/
 dist*/
+.idea/
 bundle.js
 ACG
 
@@ -100,3 +101,4 @@ poetry.lock
 *.gz
 *.xcp
 
+settings.json
