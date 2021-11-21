@@ -26,7 +26,7 @@ const COLOR_SIZE = 4;
 
 const Params = {
     axis: { x: 0.5, y: 1.0, z: 0.3 },
-    offset: { x: 0.0, y: 0.0, z: 0.8 },
+    offset: { x: 1.0, y: 1.0, z: -2.0 },
     speed: -0.1,
     angle: 30,
 };
@@ -235,6 +235,11 @@ const main = () => {
         0.2, 0.6, 0.9, 1.0,
         0.2, 0.6, 0.9, 1.0,
         0.2, 0.6, 0.9, 1.0,
+
+        0.2, 0.6, 0.9, 1.0,
+        0.2, 0.6, 0.9, 1.0,
+        0.2, 0.6, 0.9, 1.0,
+        0.2, 0.6, 0.9, 1.0,
     ]);
     const cubePosVbo = createVbo(vertices);
     const cubeNormalVbo = createVbo(normals);
@@ -269,7 +274,7 @@ const main = () => {
     gl.uniform3f(axisLoc, Params.axis.x, Params.axis.y, Params.axis.z);
     gl.uniform3f(offsetLoc, Params.offset.x, Params.offset.y, Params.offset.z);
     gl.uniform1f(angleLoc, Params.angle);
-    const render = (ms_since_page_loaded) => {
+    const render = (ms_since_page_loaded: number) => {
 
         gl.useProgram(Program);
 

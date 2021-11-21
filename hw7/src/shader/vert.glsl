@@ -7,6 +7,7 @@ out vec4 vColor;
 out vec3 position;
 out vec3 normal;
 out vec2 texcoord;
+out vec3 plight;
 uniform float u_time;
 
 uniform vec3 offset;
@@ -37,10 +38,11 @@ vec4 makeQuatFromAxisAngle(vec3 axis, float angle) {
 
 void main() {
     vColor = vertexColor;
-    normal = vertexNormal;
-    float theta = u_time * 2.0;
+    plight = offset;
+    float theta = u_time * 10.0;
     vec4 rotQuat = makeQuatFromAxisAngle(axis, angle);
     vec3 rot = rotate3d(rotate3d(vertexPosition, rotQuat), makeQuatFromAxisAngle(vec3(0.0, 1.0, 0.0), theta));
+    normal = rotate3d(rotate3d(vertexNormal, rotQuat), makeQuatFromAxisAngle(vec3(0.0, 1.0, 0.0), theta));
     mat4 scalemat = mat4(0.5, 0.0, 0.0, 0.0, 0.0, 0.5, 0.0, 0.0, 0.0, 0.0, 0.5, 0.0, 0.0, 0.0, 0.0, 1.0);
     gl_Position = scalemat * vec4(rot, 1.0);
     position = gl_Position.xyz;
