@@ -17,6 +17,9 @@ vec3 orange = vec3(1.0, 1.0, 0.2);
 vec3 yellow = vec3(0.956, 0.898, 0.247);
 vec3 black = vec3(0.0);
 vec3 white = vec3(1.0);
+vec3 gray = vec3(0.147);
+vec3 pink = vec3(1.0, 0.69, 0.66);
+vec3 green = vec3(0.20, 0.52, 0.13);
 
 float merge(float d1, float d2){
   return min(d1, d2);
@@ -48,9 +51,7 @@ mat2 rotate2dm(float _angle){
 
 
 vec2 rotate2D (vec2 _st, float _angle) {
-  _st -= 0.5;
   _st =  rotate2dm(_angle) * _st;
-  _st += 0.5;
   return _st;
 }
 
@@ -98,18 +99,35 @@ float rand(vec2 uv){
   return fract(sin(dot(uv, vec2(12.9898, 78.233))) * 43758.5453);
 }
 
-vec4 drawOrchid(vec3 bg_color) {
-  // General parameters
-  float smoothness = 0.03;
+float cW = 2.0;
+float cH = 1.5;
 
-  // Tiling
+float bool2sign(int x) {
+  /* if (x == 0) return 1.0; */
+  /* else return -1.0; */
+  /* return 1.0; */
+  return float(-1 * x + (1 - x));
+}
+
+float modfloat(float x, float a) {
+  return x - floor(x / a) * a;
+}
+
+vec4 drawOrchid(vec3 bg_color) {
+  float smoothness = 0.05;
+
   vec2 st = gl_FragCoord.xy / u_resolution.xy * 2.0 - 1.0;
   st.x *= u_resolution.x / u_resolution.y;
 
-  /* st = rotate2D(st,-PI*u_time*0.15); */
+  float x = st.x + 0.5 * u_time;
+  float y = st.y + 0.3 * u_time;
+  x = bool2sign(int((x + cW / 2.0) / cW) % 2) * (modfloat(x + cW / 2.0, cW) - cW / 2.0);
+  y = bool2sign(int((y + cH / 2.0) / cH) % 2) * (modfloat(y + cH / 2.0, cH) - cH / 2.0);
+  st.xy = vec2(x, y);
 
+  st = rotate2D(st,TAU*u_time*0.15);
   // Orchid parameters. The orchid is composed by sepals, petals, lip and column
-  /* st += vec2(-0.5, -0.5); */
+
   //column parameters
   float colResize = 0.45;
   vec2 posCol = st;
@@ -174,25 +192,25 @@ vec4 drawOrchid(vec3 bg_color) {
   vec3 orcColor = mix(sepalsColor, bg_color, sepals);
 
   // Lip color:
-  // 1) create the space coord for the points
+  // 1) create the space coord for the dots
   vec2 lipSt = st;
   lipSt = fract(lipSt *= 20.0);
   lipSt -= vec2(0.5,0.5);
-  // 2 create the color points
-  float points = circleDist(lipSt, 0.1);
-  points = smoothstep(points, points+0.05, 0.2);
-  vec3 colorPoints = mix(orange, white, points);
+  // 2 create the color dots
+  float dots = circleDist(lipSt, 0.1);
+  dots = smoothstep(dots, dots+0.05, 0.2);
+  vec3 colorPoints = mix(green, white, dots);
   // 3 mix the color with the orchid
   lip = fillSmooth(lip,0.09,smoothness+0.005);
   orcColor = mix(colorPoints, orcColor, lip);
 
   // Petals color
   latPetals = fillSmooth(latPetals,0.09,smoothness+0.005);
-  vec3 latPetalsColor = mix(yellow,red, sin(angle * 40.0));
+  vec3 latPetalsColor = mix(yellow, red, sin(angle * 40.0));
   latPetalsColor = mix(latPetalsColor, red, abs(st.x)*2.7);
   orcColor = mix(latPetalsColor,orcColor,latPetals);
 
-  //column color
+  // column color
   column = fillSmooth(column,0.01,0.02);
   vec3 columnColor = orange - red * (st.y *2.0);
   orcColor = mix(columnColor, orcColor, column);
@@ -205,38 +223,38 @@ vec4 drawOrchid(vec3 bg_color) {
 
 float seed;
 
-mat2 r2d(float t){
+mat2 r2d(float t) {
   return mat2(cos(t),sin(t),-sin(t),cos(t));
 }
 
-mat3 orthBas(vec3 z){
-  z=normalize(z);
-  vec3 up=abs(z.y)>0.999?vec3(0,0,1):vec3(0,1,0);
-  vec3 x=normalize(cross(up,z));
+mat3 orthBas(vec3 z) {
+  z = normalize(z);
+  vec3 up = abs(z.y)>0.999?vec3(0,0,1):vec3(0,1,0);
+  vec3 x = normalize(cross(up,z));
   return mat3(x,cross(z,x),z);
 }
 
-float random(){
+float random() {
   seed++;
   return fs(seed);
 }
 
-vec3 uniformLambert(vec3 n){
-  float p=PI*2.*random();
-  float cost=sqrt(random());
-  float sint=sqrt(1.0-cost*cost);
+vec3 uniformLambert(vec3 n) {
+  float p = TAU*random();
+  float cost = sqrt(random());
+  float sint = sqrt(1.0-cost*cost);
   return orthBas(n)*vec3(cos(p)*sint,sin(p)*sint,cost);
 }
 
-vec4 tbox(vec3 ro,vec3 rd,vec3 s){
-  vec3 or=ro/rd;
-  vec3 pl=abs(s/rd);
-  vec3 f=-or-pl;
-  vec3 b=-or+pl;
-  float fl=max(f.x,max(f.y,f.z));
-  float bl=min(b.x,min(b.y,b.z));
-  if(bl<fl||fl<0.){return vec4(1E2);}
-  vec3 n=-sign(rd)*step(f.yzx,f.xyz)*step(f.zxy,f.xyz);
+vec4 tbox(vec3 ro,vec3 rd,vec3 s) {
+  vec3 or = ro/rd;
+  vec3 pl = abs(s/rd);
+  vec3 f = -or-pl;
+  vec3 b = -or+pl;
+  float fl = max(f.x,max(f.y,f.z));
+  float bl = min(b.x,min(b.y,b.z));
+  if (bl<fl||fl<0.0) return vec4(1E2);
+  vec3 n = -sign(rd)*step(f.yzx,f.xyz)*step(f.zxy,f.xyz);
   return vec4(n,fl);
 }
 
@@ -248,135 +266,135 @@ struct QTR {
   bool hole;
 };
 
-bool isHole(vec3 p){
-  if(abs(p.x)<0.5&&abs(p.y)<0.5){return true;}
-  float dice=fs(dot(p,vec3(-2.0,-5.0,7.0)));
-  if(dice<0.3){return true;}
+bool isHole(vec3 p) {
+  if (abs(p.x)<0.5&&abs(p.y)<0.5) return true;
+  float dice = fs(dot(p,vec3(-2.0,-5.0,7.0)));
+  if (dice<0.3) return true;
   return false;
 }
 
 QTR qt(vec3 ro,vec3 rd){
-  vec3 haha=lofi(ro+rd*1E-2,0.5);
-  float ha=fs(dot(haha,vec3(6.0,2.0,0.0)));
-  ha=smoothstep(-0.2,0.2,sin(0.5*u_time+PI*2.0*(ha-0.5)));
+  vec3 haha = lofi(ro+rd*1E-2,0.5);
+  float ha = fs(dot(haha,vec3(6.0,2.0,0.0)));
+  ha = smoothstep(-0.2,0.2,sin(0.5*u_time+TAU*(ha-0.5)));
 
-  ro.z+=ha;
+  ro.z += ha;
 
   QTR r;
-  r.size=1.0;
-  for(int i=0;i<4;i++){
-    r.size/=2.;
-    r.cell=lofi(ro+rd*1E-2*r.size,r.size)+r.size/2.0;
-    if(isHole(r.cell)){break;}
-    float dice=fs(dot(r.cell,vec3(5.0,6.0,7.0)));
-    if(dice>r.size){break;}
+  r.size = 1.0;
+  for (int i= 0; i<4; i++) {
+    r.size /= 2.0;
+    r.cell = lofi(ro+rd*1E-2*r.size,r.size)+r.size/2.0;
+    if(isHole(r.cell)) break;
+    float dice = fs(dot(r.cell,vec3(5.0,6.0,7.0)));
+    if(dice>r.size) break;
   }
 
-  vec3 or=(ro-r.cell)/rd;
-  vec3 pl=abs(r.size/2./rd);
-  vec3 b=-or+pl;
-  r.len=min(b.x,min(b.y,b.z));
+  vec3 or = (ro-r.cell)/rd;
+  vec3 pl = abs(r.size/2./rd);
+  vec3 b = -or+pl;
+  r.len = min(b.x,min(b.y,b.z));
 
-  r.pos=r.cell-vec3(0.0,0.0,ha);
-  r.hole=isHole(r.cell);
+  r.pos = r.cell-vec3(0.0,0.0,ha);
+  r.hole = isHole(r.cell);
 
   return r;
 }
 
 vec4 drawBackground() {
-  vec2 uv=gl_FragCoord.xy/u_resolution.xy;
-  vec2 p=uv*2.0-1.0;
-  p.x*=u_resolution.x/u_resolution.y;
+  vec2 uv = gl_FragCoord.xy/u_resolution.xy;
+  vec2 p = uv*2.0-1.0;
+  p.x *= u_resolution.x/u_resolution.y;
 
-  /* seed=texture(iChannel0,p).x; */
-  seed=fract(u_time);
+  /* seed = texture(iChannel0,p).x; */
+  seed = fract(u_time);
 
-  float haha=u_time*62.0/60.0;
-  float haha2=floor(haha)-.2*exp(-fract(haha));
+  float haha = u_time*62.0/60.0;
+  float haha2 = floor(haha)-.2*exp(-fract(haha));
 
-  p=r2d(u_time*0.2+0.2*floor(haha))*p;
+  p = r2d(u_time*0.2+0.2*floor(haha))*p;
 
-  vec3 ro0=vec3(0.0,0.0,1.0);
-  ro0.z-=haha2;
-  ro0+=0.02*vec3(sin(u_time*1.36),sin(u_time*1.78),0.0);
+  vec3 ro0 = vec3(0.0,0.0,1.0);
+  ro0.z -= haha2;
+  ro0 += 0.02*vec3(sin(u_time*1.36),sin(u_time*1.78),0.0);
 
-  vec3 rd0=normalize(vec3(p,-1.0));
+  vec3 rd0 = normalize(vec3(p,-1.0));
 
-  vec3 ro=ro0;
-  vec3 rd=rd0;
-  vec3 fp=ro+rd*2.0;
-  ro+=vec3(0.04*vec2(random(),random())*mat2(1.0,1.0,-1.0,1.0),0.0);
-  rd=normalize(fp-ro);
+  vec3 ro = ro0;
+  vec3 rd = rd0;
+  vec3 fp = ro+rd*2.0;
+  ro += vec3(0.04*vec2(random(),random())*mat2(1.0,1.0,-1.0,1.0),0.0);
+  rd = normalize(fp-ro);
 
-  float rl=0.01;
-  vec3 rp=ro+rd*rl;
+  float rl = 0.01;
+  vec3 rp = ro+rd*rl;
 
-  vec3 col=vec3(0.0);
-  vec3 colRem=vec3(1.0);
-  float samples=1.0;
+  vec3 col = vec3(0.0);
+  vec3 colRem = vec3(1.0);
+  float samples = 1.0;
 
-  for(int i=0;i<200;i++){
-    QTR qtr=qt(rp,rd);
+  for (int i= 0; i<200; i++) {
+    QTR qtr = qt(rp,rd);
 
     vec4 isect;
-    if(qtr.hole){
-      isect=vec4(1E2);
-    }else{
-      float size=qtr.size*0.5;
-      size-=0.01;
-      size-=0.02*(0.5+0.5*sin(5.0*u_time+15.0*qtr.cell.z));
-      isect=tbox(rp-qtr.pos,rd,vec3(size));
+    if (qtr.hole) {
+      isect = vec4(1E2);
+    } else {
+      float size = qtr.size*0.5;
+      size -= 0.01;
+      size -= 0.02*(0.5+0.5*sin(5.0*u_time+15.0*qtr.cell.z));
+      isect = tbox(rp-qtr.pos,rd,vec3(size));
     }
 
-    if(isect.w<1E2){
-      float fog=exp(-.2*rl);
-      colRem*=fog;
+    if (isect.w<1E2) {
+      float fog = exp(-.2*rl);
+      colRem *= fog;
 
-      rl+=isect.w;
-      rp=ro+rd*rl;
+      rl += isect.w;
+      rp = ro+rd*rl;
 
-      vec3 mtl=fs(cross(qtr.cell,vec3(4.0,8.0,1.0)));
+      vec3 mtl = fs(cross(qtr.cell,vec3(4.0,8.0,1.0)));
 
-      vec3 n=isect.xyz;
+      vec3 n = isect.xyz;
 
-      if(mtl.x<0.1){
-        col+=colRem*vec3(10.0,1.0,1.0);
-        colRem*=0.0;
-      }else if(mtl.x<0.2){
-        col+=colRem*vec3(6.0,8.0,11.0);
-        colRem*=0.0;
-      }else{
-        colRem*=0.3;
+      if (mtl.x<0.1) {
+        col += colRem*vec3(10.0,1.0,1.0);
+        colRem *= 0.0;
+      } else if (mtl.x<0.2) {
+        col += colRem*vec3(6.0,8.0,11.0);
+        colRem *= 0.0;
+      } else {
+        colRem *= 0.3;
       }
 
-      ro=ro+rd*rl;
-      rd=mix(uniformLambert(n),reflect(rd,n),pow(random(),0.3));
-      rl=0.01;
-    } else{
-      rl+=qtr.len;
-      rp=ro+rd*rl;
+      ro = ro+rd*rl;
+      rd = mix(uniformLambert(n),reflect(rd,n),pow(random(),0.3));
+      rl = 0.01;
+    } else {
+      rl += qtr.len;
+      rp = ro+rd*rl;
     }
 
-    if(colRem.x<0.01){
-      ro=ro0;
-      rd=rd0;
-      vec3 fp=ro+rd*2.0;
-      ro+=vec3(0.04*vec2(random(),random())*mat2(1.0,1.0,-1.0,1.0),0.0);
-      rd=normalize(fp-ro);
-      rl=0.01;
-      rp=ro+rd*rl;
-      colRem=vec3(1.0);
+    if (colRem.x<0.01) {
+      ro = ro0;
+      rd = rd0;
+      vec3 fp = ro+rd*2.0;
+      ro += vec3(0.04*vec2(random(),random())*mat2(1.0,1.0,-1.0,1.0),0.0);
+      rd = normalize(fp-ro);
+      rl = 0.01;
+      rp = ro+rd*rl;
+      colRem = vec3(1.0);
       samples++;
     }
   }
 
-  col=pow(col/samples,vec3(0.4545));
-  col*=1.0-0.4*length(p);
-  col=vec3(
-    smoothstep(0.1,0.9,col.x),
-    smoothstep(0.0,1.0,col.y),
-    smoothstep(-0.1,1.1,col.z)
-  );
+  col = pow(col/samples,vec3(0.4545));
+  col *= 1.0-0.4*length(p);
+  col = vec3(
+      smoothstep(0.1,0.9,col.x),
+      smoothstep(0.0,1.0,col.y),
+      smoothstep(-0.1,1.1,col.z)
+      );
 
   vec4 prev = vec4(0.0);
   return mix(vec4(col,1.0),prev,0.5*prev.w);
@@ -384,6 +402,7 @@ vec4 drawBackground() {
 
 void main() {
   vec4 bg_color = drawBackground();
+  /* vec4 bg_color = vec4(black, 1.0); */
   color_out = drawOrchid(bg_color.xyz);
 }
 

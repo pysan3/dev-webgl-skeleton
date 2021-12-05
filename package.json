@@ -26,7 +26,7 @@
   },
   "scripts": {
     "build": "webpack --config webpack.dev.js",
-    "start": "webpack-dev-server --port 8081 --config webpack.dev.js",
+    "start": "webpack-dev-server --config webpack.dev.js",
     "pack": "webpack --config webpack.inline.js"
   },
   "dependencies": {
