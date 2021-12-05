@@ -2,8 +2,8 @@ import vertexShaderSource from './shader/vert.glsl'
 import fragmentShaderSource from './shader/flag.glsl'
 
 const cSize = {
-    width: 400,
-    height: 400,
+    width: 1080,
+    height: 720,
 } as const;
 type cSize = typeof cSize[keyof typeof cSize];
 
